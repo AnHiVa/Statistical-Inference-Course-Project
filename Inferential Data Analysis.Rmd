@@ -1,0 +1,151 @@
+---
+title: "Basic Inferential Data Analysis Exercise: The Effect of Vitamin C on Tooth Growth in Guinea Pigs"
+author: "Andrés Hidalgo Vargas"
+date: "14/7/2020"
+output: pdf_document
+---
+# Exploratory Analysis
+```{r message=FALSE}
+library(ggplot2)
+library(dplyr)
+
+data(ToothGrowth)
+```
+### Data description
+The response is the length of odontoblasts (cells responsible for tooth growth) in 60 guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, orange juice or ascorbic acid (a form of vitamin C and coded as VC).
+```{r}
+str(ToothGrowth)
+```
+There are 2 levels of the supp variable. "OJ" and "VC". These stand for *Orange Juice* and *Vitamin C* respectively. 
+
+```{r}
+unique(ToothGrowth$dose)
+```
+There were 3 doses used. 0.5, 1.0 and 2.0.
+
+```{r}
+summary(ToothGrowth)
+```
+
+```{r}
+ggplot(ToothGrowth, aes(x = supp, y = len, fill = supp)) + 
+  geom_violin(alpha = 1/2) +
+  geom_boxplot(width = 0.1) + 
+  facet_wrap(~ dose)+
+  xlab("Supplement Type")+
+  ylab("Tooth length")+
+  labs(title = "Tooth growth by supplement and dose (mg/day)")
+```
+Analyzing the violin plots, we will assume unequal variances in our hypothesis testing.
+
+# Comparisons 
+
+## Supplement and lenght relationship
+
+**H0:** mean odontoblast length of vitamin C subjects = mean odontoblas length of orange juice subjects
+```{r}
+t.test(len ~ supp, data = ToothGrowth)
+```
+Given the result of the t test the p-value calculated 0.061 is greater tan our alpha 0.05. Therefore there is not sufficient statistical evidence to to reject the null hypothesis of equal means. 
+
+## Dose and length relationship
+
+Due to the fact that in the analysis 3 different doses where used, we need to perform a `t.test` for each combination.
+
+```{r}
+dose0.5 <- ToothGrowth %>%
+  filter(dose == 0.5) %>%
+  select(len)
+
+dose1 <- ToothGrowth %>%
+  filter(dose == 1) %>%
+  select(len)
+
+dose2 <- ToothGrowth %>%
+  filter(dose == 2) %>%
+  select(len)
+```
+
+### 0.5 with 1 mg/day
+**H0:** mean odontoblast length of 0.5 mg/day dose = mean odontoblast length of 1 mg/day dose
+```{r}
+t.test(dose0.5,dose1)
+```
+p-value 1.268e-07 < 0.05, therefore there is enough statistical evidence to reject the null hypothesis. 
+
+### 0.5 with 2 mg/day
+**H0:** mean odontoblast length of 0.5 mg/day dose = mean odontoblast length of 2 mg/day dose
+```{r}
+t.test(dose0.5,dose2)
+```
+p-value 4.898e-14 < 0.05, therefore there is enough statistical evidence to reject the null hypothesis. 
+
+### 1 with 2 mg/day
+**H0:** mean odontoblast length of 1 mg/day dose = mean odontoblast length of 2 mg/day dose
+```{r}
+t.test(dose1,dose2)
+```
+p-value 1.906e-05 < 0.05, therefore there is enough statistical evidence to reject the null hypothesis. 
+
+### Dose and lenght relationship conclusion
+
+The data suggests that there is a relationship between the length of odontoblasts and the dosage administered to the subjects. 
+
+## Supplement dosage level comparisons
+Given that dosage seems like a variable that affects the odontoblasts length, we need to analyze if there is a relationship between the length and the combination of supplements and dosage levels. 
+
+```{r}
+VC0.5 <- ToothGrowth %>%
+  filter(supp == "VC" & dose == 0.5) %>%
+  select(len)
+
+VC1 <- ToothGrowth %>%
+  filter(supp == "VC" & dose == 1) %>%
+  select(len)
+
+VC2 <- ToothGrowth %>%
+  filter(supp == "VC" & dose == 2) %>%
+  select(len)
+
+OJ0.5 <- ToothGrowth %>%
+  filter(supp == "OJ" & dose == 0.5) %>%
+  select(len)
+
+OJ1 <- ToothGrowth %>%
+  filter(supp == "OJ" & dose == 1) %>%
+  select(len)
+
+OJ2 <- ToothGrowth %>%
+  filter(supp == "OJ" & dose == 2) %>%
+  select(len)
+```
+
+### 0.5 mg/day Vitamin C with 0.5 mg/day Orange Juice
+**H0:** mean odontoblast length of 0.5 mg/day dose of Vitamin C = mean odontoblast length of 0.5 mg/day dose of Orange Juice.
+```{r}
+t.test(VC0.5,OJ0.5)
+```
+p-value 0.006 < 0.05. There is enough statistical evidence to reject the null hypothesis. 
+
+### 1 mg/day Vitamin C with 1 mg/day Orange Juice
+**H0:** mean odontoblast length of 1 mg/day dose of Vitamin C = mean odontoblast length of 1 mg/day dose of Orange Juice.
+```{r}
+t.test(VC1,OJ1)
+```
+p-value 0.001 < 0.05. There is enough statistical evidence to reject the null hypothesis. 
+
+### 2 mg/day Vitamin C with 2 mg/day Orange Juice
+**H0:** mean odontoblast length of 2 mg/day dose of Vitamin C = mean odontoblast length of 2 mg/day dose of Orange Juice.
+```{r}
+t.test(VC2,OJ2)
+```
+p-value 0.964 > 0.05.
+The confidence interval includes 0.
+
+Therefore there is no statistical significant difference between the means Vitamin C and Orange Juice  whit a dose level of 2 mg/day. 
+
+# Conclusions
+
+Dosage levels of the supplements given affect tooth growth significantly. While, supplements by themselves do not seem to affect the length of odontoblasts. 
+
+Orange Juice when given in 0.5 and 1 mg/day doses, promotes bigger tooth growth compared to Vitamin C. Thou, when administered at 2 mg/day, both supplements seem to promote a similar tooth growth effect. 
